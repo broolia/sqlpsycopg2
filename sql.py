@@ -23,7 +23,7 @@ def add_new_client(conn, first_name, last_name, email):
             conn.commit()
             return client_id
         except psycopg2.errors.UniqueViolation:
-            print(f"Error: Email {email} already exists.  Client not added.")  
+            print(f"Error: Email {email} уже существует.  Клиент не добавлен.")  
             conn.rollback()  
             return None  
 
@@ -35,7 +35,7 @@ def add_phone(conn,client_id,phone_number):
 
 def update_client(conn, client_id, first_name=None, last_name=None, email=None):
     if client_id is None:  
-        print("Cannot update client with ID None.")
+        print("Не возможно обновить клиента с ID None.")
         return
     with conn.cursor() as cur:
         updates = []
@@ -55,9 +55,9 @@ def update_client(conn, client_id, first_name=None, last_name=None, email=None):
             values.append(client_id)
             cur.execute(query, tuple(values))  
             conn.commit()
-            print(f"Client data with ID {client_id} successfully updated.")
+            print(f"Данные о клиенте с ID {client_id} успешно добавлена.")
         else:
-            print("No data provided for update.")
+            print("Не были переданы данные для обновления записи.")
 
     
  
@@ -83,32 +83,41 @@ def find_client(conn,query):
             WHERE c.first_name LIKE %s OR c.last_name LIKE %s OR c.email LIKE %s OR p.phone_number LIKE %s
             ''', ('%' + query + '%', '%' + query + '%', '%' + query + '%', '%' + query + '%'))
             return cur.fetchall()
+def check_if_client_exists(conn, email):
+  with conn.cursor() as cur:
+    cur.execute("SELECT id FROM clients WHERE email = %s", (email,))
+    result = cur.fetchone()
+    return result is not None
 
-try:
-    create_table()
 
-    client_id_1 = add_new_client(conn, "Иван", "Иванов", "ivan@example.com")
-    if client_id_1:
-        add_phone(conn, client_id_1, "+79123456789")
-        update_client(conn, client_id_1, email="new_ivan@example.com")
-        print(find_client(conn, "Иван"))
-        delete_phone_number(conn, client_id_1)
-        print(find_client(conn, "Иван"))
-        delete_client(conn, client_id_1)  
-        print(find_client(conn, "Иван")) 
+if not check_if_client_exists(conn, "zahar@gmail.com"):
+    client_id_3 = add_new_client(conn, "Захар", "Иванов", "zahar@gmail.com")
+    if client_id_3:
+        add_phone(conn, client_id_3, "+7912899789")
+        update_client(conn, client_id_3, email="new_zahar@egmail.com")
+        print(find_client(conn, "Захар"))
+        delete_phone_number(conn, client_id_3)
+        print(find_client(conn, "Иванов"))
+        delete_client(conn, client_id_3)
+        print(find_client(conn, "Захар"))
+else:
+    print("Клиент Захар уже существует")
 
-    client_id_2 = add_new_client(conn, "Татьяна", "Иванова", "moorka@gmail.com")
-    if client_id_2:
-        add_phone(conn, client_id_2, "+7918856789")  
-        update_client(conn, client_id_2, email="new_moorka@example.com")  
-        print(find_client(conn, "Татьяна"))
-        delete_phone_number(conn, client_id_2)
-        print(find_client(conn, "Татьяна"))
-        delete_client(conn, client_id_2)
-        print(find_client(conn, "Татьяна"))
 
-        for client in find_client(conn, ""): 
-            print(client)
+if not check_if_client_exists(conn, "joorka@gmail.com"):
+    client_id_4 = add_new_client(conn, "Марина", "Тарасова", "joorka@gmail.com")
+    if client_id_4:
+        add_phone(conn, client_id_4, "+7918856789")
+        update_client(conn, client_id_4, email="new_joorka@example.com")
+        print(find_client(conn, "Марина"))
+        delete_phone_number(conn, client_id_4)
+        print(find_client(conn, "Марина"))
+        delete_client(conn, client_id_4)
+        print(find_client(conn, "Марина"))
+else:
+     print("Клиент Марина уже существует")
 
-finally:
-    conn.close()
+for client in find_client(conn, ""):
+    print(client)
+
+conn.close()
